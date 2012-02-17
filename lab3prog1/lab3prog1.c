@@ -15,7 +15,10 @@
 // val is from ADC
 int remap(int val, int min_val, int max_val)
 {
-	int result = ((val-min_val)/(max_val-min_val))*255;
+	double num = val - min_val;
+	double dom = max_val-min_val;
+	
+	int result = (num/dom)*255;
 
 	if(result<0)		//If ADC value is below min value
 		return 0;
@@ -29,22 +32,26 @@ int remap(int val, int min_val, int max_val)
 void tone(int input)
 {
 	//i rep the number of wave within 1 sec
-	int i, freq; 
-	double period;
+	int freq; 
+	double period, division;
 	
-	freq = (input/255)*400+100;   //100 is the least freq, 500 is the highest freq
-	period = 1/freq;			  //eg. 0.01s
+	division = input/255.0;
 	
-	for(i=0; i< freq; i++)
+	freq = division*400+100;   //100 is the least freq, 500 is the highest freq
+	period = 1.0/freq;			  //eg. 0.01s
+	
+	double delay = period/2*pow(10,3); 
+	
+	for(int i=0; i< freq; i++)
 	{
 		// Write a 1 to digital pin 13 (PINB 5)
 		PINB|= 0b00100000;
-		_delay_ms(period/2*pow(10,3));
+		_delay_ms(delay);
 		//Delay is half the period (in millisecond)
 	
 		// Write a 0 to digital pin 13 (PINB 5)
 		PINB &= 0b11011111;
-		_delay_ms(period/2*pow(10,3));
+		_delay_ms(delay);
 		//Delay is half the period (in millisecond)
 	}
 }
@@ -84,9 +91,9 @@ int main(void)
 		adcval= hival * 256 + loval;
 		
 		//0-255 steps for tone strength 
-	    constrained  = remap(750,620,890);
+	    constrained  = remap(adcval,620,890);
 		
 		//Output tone )
-		tone(00);
+		tone(constrained);
 	}	
 }
